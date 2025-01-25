@@ -2,10 +2,17 @@ import random
 from enum import Enum
 
 class Florista(Enum):
-    HELOISE = 1
-    JOSIANE = 2
-    VALERIA = 3
-    YANDRE = 4
+    HELOISE = 0
+    JOSIANE = 1
+    VALERIA = 2
+    YANDRE = 3
+
+class Moesi(Enum):
+    M = 0
+    O = 1
+    E = 2
+    S = 3
+    I = 4
 
 class Floricultura:
     def __init__(self):
@@ -15,7 +22,7 @@ class Floricultura:
         print("\nleitura", florista, str(flor))
         return None
     
-    def escrita(self, florista: Florista, flor: int, novo_valor):
+    def escrita(self, florista: Florista, flor: int, novo_valor: int):
         print("\nescrita", florista, flor, novo_valor)
         return None
         
@@ -89,7 +96,6 @@ def main():
         flor_str = input("\nDigite o nome da flor: ").strip().lower()
         while (flor:= flores_dict.get(flor_str)) is None:
             flor_str = input("Flor não encontrada no catálogo! Digite outro nome: ").strip().lower()
-        print(flor)
         if operacao == "l":
             floricultura.leitura(florista, flor)
         elif operacao == "e":
