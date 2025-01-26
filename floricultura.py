@@ -217,7 +217,7 @@ class Floricultura:
 
         #Caso um estado owned seja substituido
         if linha_cache_mp.estado == Moesi.O:
-            self.verifica_estado(nova_linha)
+            self.verifica_estado(linha_cache_mp)
 
         florista_cache.fifo_contador = (florista_cache.fifo_contador + 1) % 4
         linha_cache_mp.dados = self.estufa[bloco_flor].copy()
@@ -282,7 +282,7 @@ class Floricultura:
                             break
             # Caso linha substituida ter estado O, mas não haver linha S em outra cache,
             # ou linha substituida ter estado M, aí precisa escrever de volta na memória
-            if promovida is None or substituida.estado == Moesi.M:
+            if (substituida.estado == Moesi.O and promovida is None) or substituida.estado == Moesi.M:
                 self.estufa[substituida.bloco_mp] = substituida.dados[:]
 
             # Invalidação das linhas das outras caches
