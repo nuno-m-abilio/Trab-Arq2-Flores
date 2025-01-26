@@ -99,7 +99,24 @@ class Floricultura:
                 print(f"  Linha {j}: Bloco MP {bloco}, Estado {estado}, Dados {dados}")
         print("=========================\n")
 
-    def verifica_estado(self, bloco_substituido: int):
+    def imprime_mp(self):
+        '''
+        Imprime como está os dados da MP
+        '''
+
+        print("\n=== Estado da MP ===")
+        for i, bloco in enumerate(self.estufa):
+            print(f"Linha {i}: Bloco MP {bloco}")
+
+    
+    def write_back(self, cache_linha: Linha):
+        '''
+        Passa os dados da linha da cache de volta para a memória principal
+        '''
+        localizacao_mp = cache_linha.bloco_mp
+        self.estufa[localizacao_mp] = cache_linha.dados.copy()
+        
+    def verifica_estado(self, linha_substituida: Linha):
 
         '''
         Corrige os estados das caches quando uma linha em estado 'Owned (O)' é substituída.
@@ -107,6 +124,7 @@ class Floricultura:
         '''
 
         linha_promovida = False  # Flag para evitar múltiplas promoções
+        bloco_substituido = linha_substituida.bloco_mp
 
         # Percorre todas as caches
         for florista_cache in self.floristas:
@@ -120,7 +138,12 @@ class Floricultura:
                     else:
                         # Linhas subsequentes permanecem em estado Shared
                         linha.estado = Moesi.S
+
+        # Caso não tenha mais nenhuma outra cache em estado Shared, escreve o dado na MP
+        if not linha_promovida:
+            self.write_back(linha_substituida)
     
+                    
     def leitura(self, florista: Florista, flor: int):
 
         ''' Realiza a leitura de uma flor por um florista específico.
@@ -142,6 +165,7 @@ class Floricultura:
                   f"\nEstado:{florista_cache.linhas[linha_cache].estado}")
 
             self.imprimir_caches() #TESTE
+            self.imprime_mp() #TESTE
 
             return florista_cache.linhas[linha_cache].dados[posicao]
 
@@ -165,7 +189,7 @@ class Floricultura:
 
                     # Caso um estado owned seja substituido
                     if nova_linha.estado == Moesi.O:
-                        self.verifica_estado(nova_linha.bloco_mp)
+                        self.verifica_estado(nova_linha)
 
                     florista_cache.fifo_contador += 1
                     nova_linha.dados = linha.dados.copy()
@@ -174,6 +198,7 @@ class Floricultura:
                     print("Dado transferido. Estado atualizado para Shared.")
 
                     self.imprimir_caches() #TESTE
+                    self.imprime_mp() #TESTE
 
                     return nova_linha.dados[posicao]           
                 
@@ -183,7 +208,7 @@ class Floricultura:
 
                     # Caso um estado owned seja substituido
                     if nova_linha.estado == Moesi.O:
-                        self.verifica_estado(nova_linha.bloco_mp)  
+                        self.verifica_estado(nova_linha)  
 
                     florista_cache.fifo_contador += 1
                     nova_linha.dados = linha.dados.copy()
@@ -192,29 +217,31 @@ class Floricultura:
                     print("Dado transferido. Estado atualizado para Shared.")
 
                     self.imprimir_caches() #TESTE
+                    self.imprime_mp() #TESTE
 
                     return nova_linha.dados[posicao]
 
         # Nenhuma outra cache possui o dado, buscar na memória principal
         print("Bloco não encontrado em nenhuma cache. Carregando da memória principal...")
-        linha_cache = florista_cache.linhas[florista_cache.fifo_contador % 4]
-        print(linha_cache)
+        linha_cache_mp = florista_cache.linhas[florista_cache.fifo_contador % 4]
+        print(linha_cache_mp)
 
         #Caso um estado owned seja substituido
-        if linha_cache.estado == Moesi.O:
-            self.verifica_estado(linha_cache.bloco_mp)
+        if linha_cache_mp.estado == Moesi.O:
+            self.verifica_estado(nova_linha)
 
         florista_cache.fifo_contador += 1
-        linha_cache.dados = self.estufa[bloco_flor].copy()
-        linha_cache.bloco_mp = bloco_flor
-        linha_cache.estado = Moesi.E  # Estado inicial ao carregar da MP
+        linha_cache_mp.dados = self.estufa[bloco_flor].copy()
+        linha_cache_mp.bloco_mp = bloco_flor
+        linha_cache_mp.estado = Moesi.E  # Estado inicial ao carregar da MP
         print(f"Bloco carregado!" 
-              f"\nQuantidade: {linha_cache.dados[posicao]}"
-                f"\nEstado: {linha_cache.estado}")
+              f"\nQuantidade: {linha_cache_mp.dados[posicao]}"
+                f"\nEstado: {linha_cache_mp.estado}")
 
         self.imprimir_caches() #TESTE
+        self.imprime_mp() #TESTE
 
-        return linha_cache.dados[posicao]
+        return linha_cache_mp.dados[posicao]
     
     def escrita(self, florista: Florista, flor: int, novo_valor: int):
         print("\nescrita", florista, flor, novo_valor)
