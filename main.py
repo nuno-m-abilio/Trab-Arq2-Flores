@@ -57,14 +57,19 @@ def main():
                 florista = f.Florista.YANDRE
         
         # Escolha da Operação
-        operacao = input("\nEscolha a operação (l: Leitura, e: Escrita, s: Sair): ").strip().lower()
-        while operacao not in ["l", "e", "s"]:
+        operacao = input("\nEscolha a operação:\nl: Leitura da quantidade de uma flor no estoque,\ne: Escrita da quantidade de uma flor no estoque,\nc: Consultar o bloco na MP de uma flor,\ni: Imprimir toda a floricultura,\ns: Sair\n").strip().lower()
+        while operacao not in ["l", "e", "s", "c", "i"]:
             operacao = input("\nOpção Inválida!Escolha uma operação da lista (l: Leitura, e: Escrita, s: Sair): ").strip().lower()
         
         # Saí da aplicação apagando toda a floricultura
         if operacao == "s":
             break
         
+        if operacao == "i":
+            floricultura.imprimir_caches()
+            floricultura.imprime_mp()
+            continue
+
         # Escolher sobre qual flor iremos fazer a operação
         print("\nFlores disponíveis:\n")
         print(flores)
@@ -89,6 +94,11 @@ def main():
                     print("Entrada inválida! Insira um novo valor de estoque: ")
             floricultura.escrita(florista, flor, novo_valor)
         
+        elif operacao == "c":
+            print("\nFlor:", flor_str, "\nNúmero:", flor, "\nBloco " + str(f.bloco(flor)) + ":", floricultura.estufa[f.bloco(flor)], \
+                  "\nPosição " + str(f.pos_no_bloco(flor)) + ":", floricultura.estufa[f.bloco(flor)][f.pos_no_bloco(flor)])
+
+
         # Permite visualização completa da floricultura,com todos os dados da estufa e dos floristas
     print("Encerrando o sistema da floricultura...")
 
