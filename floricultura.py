@@ -90,7 +90,23 @@ class Floricultura:
         return None
     
     def escrita(self, florista: Florista, flor: int, novo_valor: int):
-        print("\nescrita", florista, flor, novo_valor)
+        ''' Realizar uma operação de escrita na cache, alterando o valor original de algum elemento
+        do estoque de flores. Isso é feito seguindo o protocolo MOESI, garantindo a coerência entre
+        múltiplas caches e a memória principal. O algoritmo de substituição utilizado é o FIFO e a
+        política de escrita é o write-back (os dados modificados são escritos na memória principal
+        somente quando são substituídos na cache.).'''
+        # Definição de dados iniciais
+        bloco_flor:int = bloco(flor)
+        pos_no_bloco_flor:int = pos_no_bloco(flor)
+        
+        # Procura da cache 
+        hit_or_miss:int|None = None
+        for i in range (4):
+            linha = self.floristas[florista.value][i]
+            if linha.bloco_mp == bloco_flor and linha.estado != Moesi.I:
+                hit_or_miss = i
+                break
+        
         return None
         
     def imprime(self):
