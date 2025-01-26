@@ -265,7 +265,7 @@ class Floricultura:
         if hit_or_miss is not None:
             linha:Linha = florista_certo.linhas[hit_or_miss]
             if linha.estado in [Moesi.M, Moesi.O, Moesi.S]: # Atualiza na MP
-                self.estufa[bloco_flor] = linha.dados
+                self.estufa[bloco_flor] = linha.dados[:]
                 if linha.estado != Moesi.M:
                     for i in range(4):
                         if i != florista.value:
@@ -296,7 +296,7 @@ class Floricultura:
             # Caso linha substituida ter estado O, mas não haver linha S em outra cache,
             # ou linha substituida ter estado M, aí precisa escrever de volta na memória
             if promovida is None or substituida.estado == Moesi.M:
-                self.estufa[substituida.bloco_mp] = substituida.dados
+                self.estufa[substituida.bloco_mp] = substituida.dados[:]
 
             # Invalidação das linhas das outras caches
             for i in range(4):
@@ -311,13 +311,13 @@ class Floricultura:
                                linha_invalida.estado = Moesi.I
                                break 
                             case Moesi.M: # Atualiza na MP e linha é invalidada e não procura outras linhas
-                                self.estufa[linha_invalida.bloco_mp] = linha_invalida.dados
+                                self.estufa[linha_invalida.bloco_mp] = linha_invalida.dados[:]
                                 linha_invalida.estado = Moesi.I
                                 break 
                             case Moesi.S: # Linha é invalidada
                                 linha_invalida.estado = Moesi.I
                             case Moesi.O: # Atualiza na MP e linha é invalidada
-                                self.estufa[linha_invalida.bloco_mp] = linha_invalida.dados
+                                self.estufa[linha_invalida.bloco_mp] = linha_invalida.dados[:]
                                 linha_invalida.estado = Moesi.I
 
             
