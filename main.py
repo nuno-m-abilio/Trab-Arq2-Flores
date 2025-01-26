@@ -90,7 +90,6 @@ def main():
             floricultura.escrita(florista, flor, novo_valor)
         
         # Permite visualização completa da floricultura,com todos os dados da estufa e dos floristas
-        floricultura.imprime()
     print("Encerrando o sistema da floricultura...")
 
 main()
