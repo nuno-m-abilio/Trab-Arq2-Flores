@@ -99,7 +99,8 @@ class Floricultura:
                 bloco = linha.bloco_mp if linha.bloco_mp != -1 else "N/A"
                 dados = linha.dados
                 print(f"  Linha {j}: Bloco MP {bloco}, Estado {estado}, Dados {dados}")
-        print("=========================\n")
+            print(f"Próxima linha a ser substituida pela FIFO é: {cache.fifo_contador}")
+        print("\n=========================\n")
 
     def imprime_mp(self):
         '''
@@ -166,13 +167,12 @@ class Floricultura:
                   f"\nQuantidade:{florista_cache.linhas[linha_cache].dados[posicao]}" 
                   f"\nEstado:{florista_cache.linhas[linha_cache].estado}")
 
-            self.imprimir_caches() #TESTE
-            self.imprime_mp() #TESTE
+            self.imprimir_caches() 
 
             return florista_cache.linhas[linha_cache].dados[posicao]
 
         # Miss: Verificar as outras caches
-        print("Flor não encontrada! Verificando com outros floristas...")
+        print("\nFlor não encontrada! Verificando com outros floristas...")
         for i, outro_florista in enumerate(self.floristas):
             if i == florista.value:  # Não verificar a cache do florista atual
                 continue
@@ -205,8 +205,7 @@ class Floricultura:
                 nova_linha.estado = Moesi.S  # Compartilhado
                 print("Dado transferido. Estado atualizado para Shared.")
 
-                self.imprimir_caches() #TESTE
-                self.imprime_mp() #TESTE
+                self.imprimir_caches() 
 
                 return nova_linha.dados[posicao]           
 
@@ -215,9 +214,13 @@ class Floricultura:
         linha_cache_mp = florista_cache.linhas[florista_cache.fifo_contador]
         print(linha_cache_mp)
 
-        #Caso um estado owned seja substituido
+        # Caso um estado owned seja substituido
         if linha_cache_mp.estado == Moesi.O:
             self.verifica_estado(linha_cache_mp)
+
+        # Caso um estado modified seja substituido 
+        if linha_cache_mp.estado == Moesi.M:
+            self.write_back(linha_cache_mp)        
 
         florista_cache.fifo_contador = (florista_cache.fifo_contador + 1) % 4
         linha_cache_mp.dados = self.estufa[bloco_flor].copy()
@@ -227,8 +230,7 @@ class Floricultura:
               f"\nQuantidade: {linha_cache_mp.dados[posicao]}"
                 f"\nEstado: {linha_cache_mp.estado}")
 
-        self.imprimir_caches() #TESTE
-        self.imprime_mp() #TESTE
+        self.imprimir_caches() 
 
         return linha_cache_mp.dados[posicao]
     
@@ -283,7 +285,7 @@ class Floricultura:
             # Caso linha substituida ter estado O, mas não haver linha S em outra cache,
             # ou linha substituida ter estado M, aí precisa escrever de volta na memória
             if (substituida.estado == Moesi.O and promovida is None) or substituida.estado == Moesi.M:
-                self.estufa[substituida.bloco_mp] = substituida.dados[:]
+                self.estufa[substituida.bloco_mp] = substituida.dados
 
             # Invalidação das linhas das outras caches
             for i in range(4):
@@ -316,6 +318,8 @@ class Floricultura:
             nova_linha.bloco_mp = bloco_flor
             florista_certo.linhas[florista_certo.fifo_contador] = nova_linha
             florista_certo.fifo_contador = (florista_certo.fifo_contador + 1) % 4
+
+        self.imprimir_caches()   
 
         return novo_valor
 
