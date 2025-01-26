@@ -177,6 +177,7 @@ class Floricultura:
             if i == florista.value:  # Não verificar a cache do florista atual
                 continue
             linha_outro_florista = outro_florista.buscar_bloco(bloco(flor))
+
             if linha_outro_florista is not None:
                 # Dado encontrado em outra cache
                 linha = outro_florista.linhas[linha_outro_florista]
@@ -187,52 +188,38 @@ class Floricultura:
                 if linha.estado in (Moesi.M, Moesi.E):
                     # Transferir dados e atualizar estados
                     linha.estado = Moesi.O
-                    nova_linha = florista_cache.linhas[florista_cache.fifo_contador % 4]
+                    
+                nova_linha = florista_cache.linhas[florista_cache.fifo_contador]
 
-                    # Caso um estado owned seja substituido
-                    if nova_linha.estado == Moesi.O:
-                        self.verifica_estado(nova_linha)
+                # Caso um estado owned seja substituido
+                if nova_linha.estado == Moesi.O:
+                    self.verifica_estado(nova_linha)
 
-                    florista_cache.fifo_contador += 1
-                    nova_linha.dados = linha.dados.copy()
-                    nova_linha.bloco_mp = linha.bloco_mp
-                    nova_linha.estado = Moesi.S  # Compartilhado
-                    print("Dado transferido. Estado atualizado para Shared.")
+                # Caso um estado modified seja substituido 
+                if nova_linha.estado == Moesi.M:
+                    self.write_back(nova_linha)
 
-                    self.imprimir_caches() #TESTE
-                    self.imprime_mp() #TESTE
+                florista_cache.fifo_contador = (florista_cache.fifo_contador + 1) % 4
+                nova_linha.dados = linha.dados.copy()
+                nova_linha.bloco_mp = linha.bloco_mp
+                nova_linha.estado = Moesi.S  # Compartilhado
+                print("Dado transferido. Estado atualizado para Shared.")
 
-                    return nova_linha.dados[posicao]           
-                
-                elif linha.estado in (Moesi.O, Moesi.S):
-                    # Apenas copiar dados, estados permanecem consistentes
-                    nova_linha = florista_cache.linhas[florista_cache.fifo_contador % 4]
+                self.imprimir_caches() #TESTE
+                self.imprime_mp() #TESTE
 
-                    # Caso um estado owned seja substituido
-                    if nova_linha.estado == Moesi.O:
-                        self.verifica_estado(nova_linha)  
-
-                    florista_cache.fifo_contador += 1
-                    nova_linha.dados = linha.dados.copy()
-                    nova_linha.bloco_mp = linha.bloco_mp
-                    nova_linha.estado = Moesi.S  # Compartilhado
-                    print("Dado transferido. Estado atualizado para Shared.")
-
-                    self.imprimir_caches() #TESTE
-                    self.imprime_mp() #TESTE
-
-                    return nova_linha.dados[posicao]
+                return nova_linha.dados[posicao]           
 
         # Nenhuma outra cache possui o dado, buscar na memória principal
         print("Bloco não encontrado em nenhuma cache. Carregando da memória principal...")
-        linha_cache_mp = florista_cache.linhas[florista_cache.fifo_contador % 4]
+        linha_cache_mp = florista_cache.linhas[florista_cache.fifo_contador]
         print(linha_cache_mp)
 
         #Caso um estado owned seja substituido
         if linha_cache_mp.estado == Moesi.O:
             self.verifica_estado(nova_linha)
 
-        florista_cache.fifo_contador += 1
+        florista_cache.fifo_contador = (florista_cache.fifo_contador + 1) % 4
         linha_cache_mp.dados = self.estufa[bloco_flor].copy()
         linha_cache_mp.bloco_mp = bloco_flor
         linha_cache_mp.estado = Moesi.E  # Estado inicial ao carregar da MP
