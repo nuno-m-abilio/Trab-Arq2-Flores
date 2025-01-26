@@ -159,7 +159,7 @@ class Floricultura:
         posicao = pos_no_bloco(flor)  # Calcula a posição dentro do bloco
 
         # Verifica se o bloco está na cache local
-        linha_cache = florista_cache.buscar_flor(flor)
+        linha_cache = florista_cache.buscar_bloco(bloco(flor))
         if linha_cache is not None:
             # Hit: A flor está na cache
             print(f"\nFlor encontrada!" 
@@ -176,7 +176,7 @@ class Floricultura:
         for i, outro_florista in enumerate(self.floristas):
             if i == florista.value:  # Não verificar a cache do florista atual
                 continue
-            linha_outro_florista = outro_florista.buscar_flor(flor)
+            linha_outro_florista = outro_florista.buscar_bloco(bloco(flor))
             if linha_outro_florista is not None:
                 # Dado encontrado em outra cache
                 linha = outro_florista.linhas[linha_outro_florista]
@@ -301,7 +301,7 @@ class Floricultura:
             # Invalidação das linhas das outras caches
             for i in range(4):
                 if i != florista.value:
-                    invalida:int|None = self.floristas[i].buscar_bloco(bloco_flor)
+                    invalida = self.floristas[i].buscar_bloco(bloco_flor)
                     if invalida is not None:
                         linha_invalida:Linha = self.floristas[i].linhas[invalida]
                         # Deixei repetitivo mesmo para ficar fácil de ver o que acontece com cada
@@ -331,9 +331,6 @@ class Floricultura:
             florista_certo.fifo_contador = (florista_certo.fifo_contador + 1) % 4
 
         return novo_valor
-        
-    def imprime(self):
-        print("\nimprime")
 
 def bloco(flor: int) -> int:
     ''' Função que calcula o bloco na memória principal que determinada flor (posição geral entre 0
