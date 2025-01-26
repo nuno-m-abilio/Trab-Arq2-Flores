@@ -46,7 +46,7 @@ class Cache:
         self.linhas = [Linha() for _ in range(4)]  # Cada cache tem 4 linhas
         self.fifo_contador = 0  # Para FIFO
 
-    def buscar_flor(self, flor: int) -> int|None:
+    def buscar_bloco(self, bloco_flor: int) -> int|None:
         '''Essa função confere se um bloco da MP está presente na cache. Caso esteja (hit), ela
         retorna o índice da linha na cache. Caso contrário (miss), retorna None.
         
@@ -56,16 +56,18 @@ class Cache:
         >>> c.linhas[1].bloco_mp = 0
         >>> c.linhas[2].dados = [4, 5, 6, 7]
         >>> c.linhas[2].bloco_mp = 1
-        >>> c.buscar_flor(0)
+        >>> c.buscar_bloco(0)
         1
-        >>> c.buscar_flor(4)
+        >>> c.buscar_bloco(4)
 
         '''
-        bloco_flor = bloco(flor)
-        for i in range(4):
-            if self.linhas[i].estado != Moesi.I and self.linhas[i].bloco_mp == bloco_flor:
-                return i
-        return None
+        hit_or_miss:int|None = None
+        for i in range (4):
+            linha = self.linhas[i]
+            if linha.bloco_mp == bloco_flor and linha.estado != Moesi.I:
+                hit_or_miss = i
+                break
+        return hit_or_miss
     
 class Floricultura:
     ''' Classe que representa uma floricultura que possui uma estufa que armazena uma determinada
@@ -157,7 +159,7 @@ class Floricultura:
         posicao = pos_no_bloco(flor)  # Calcula a posição dentro do bloco
 
         # Verifica se o bloco está na cache local
-        linha_cache = florista_cache.buscar_flor(flor)
+        linha_cache = florista_cache.buscar_bloco(bloco(flor))
         if linha_cache is not None:
             # Hit: A flor está na cache
             print(f"\nFlor encontrada!" 
@@ -174,7 +176,7 @@ class Floricultura:
         for i, outro_florista in enumerate(self.floristas):
             if i == florista.value:  # Não verificar a cache do florista atual
                 continue
-            linha_outro_florista = outro_florista.buscar_flor(flor)
+            linha_outro_florista = outro_florista.buscar_bloco(bloco(flor))
             if linha_outro_florista is not None:
                 # Dado encontrado em outra cache
                 linha = outro_florista.linhas[linha_outro_florista]
@@ -243,12 +245,92 @@ class Floricultura:
 
         return linha_cache_mp.dados[posicao]
     
-    def escrita(self, florista: Florista, flor: int, novo_valor: int):
-        print("\nescrita", florista, flor, novo_valor)
-        return None
+    def escrita(self, florista: Florista, flor: int, novo_valor: int) -> int:
+        ''' Realizar uma operação de escrita na cache, alterando o valor original de algum elemento
+        do estoque de flores. Isso é feito seguindo o protocolo MOESI, garantindo a coerência entre
+        múltiplas caches e a memória principal. O algoritmo de substituição utilizado é o FIFO e a
+        política de escrita é o write-back (os dados modificados são escritos na memória principal
+        somente quando são substituídos na cache.). Retorna o próprio novo_valor para verificar a
+        conclusão da função.'''
+
+        # Definição de dados iniciais
+        bloco_flor:int = bloco(flor)
+        pos_no_bloco_flor:int = pos_no_bloco(flor)
+        florista_certo:Cache = self.floristas[florista.value]
         
-    def imprime(self):
-        print("\nimprime")
+        # Procura da cache 
+        hit_or_miss:int|None = florista_certo.buscar_bloco(bloco_flor)
+
+        # Caso do Hit, ou seja, encontramos uma linha não inválida na nossa cache com o bloco certo
+        if hit_or_miss is not None:
+            linha:Linha = florista_certo.linhas[hit_or_miss]
+            if linha.estado in [Moesi.M, Moesi.O, Moesi.S]: # Atualiza na MP
+                self.estufa[bloco_flor] = linha.dados
+                if linha.estado != Moesi.M:
+                    for i in range(4):
+                        if i != florista.value:
+                            invalida:int|None = self.floristas[i].buscar_bloco(bloco_flor)
+                            if invalida is not None:
+                                self.floristas[i].linhas[invalida].estado = Moesi.I
+            linha.estado = Moesi.M
+            dados_modificados:list[int] = linha.dados[:]
+            dados_modificados[pos_no_bloco_flor] = novo_valor
+            linha.dados = dados_modificados
+
+        # Caso do Miss, ou seja, não encontramos uma linha válida na nossa cache com o bloco certo
+        # e vamos ter que fazer uma substiuição segundo o algoritmo Fifo
+        else: # hit_or_miss is None
+            
+            # Aplicação da política Write Back
+            substituida:Linha = florista_certo.linhas[florista_certo.fifo_contador]
+            promovida:int|None = None
+            # Caso da linha substituida ter estado O e há uma linha em outra cache com S que é
+            # promovida a O, sem necessidade de escrever de volta na memória 
+            if substituida.estado == Moesi.O:
+                for i in range(4):
+                    if i != florista.value:
+                        promovida = self.floristas[i].buscar_bloco(substituida.bloco_mp)
+                        if promovida is not None: # Nesse caso há uma outra linha com estado S
+                            self.floristas[i].linhas[promovida].estado = Moesi.O
+                            break
+            # Caso linha substituida ter estado O, mas não haver linha S em outra cache,
+            # ou linha substituida ter estado M, aí precisa escrever de volta na memória
+            if promovida is None or substituida.estado == Moesi.M:
+                self.estufa[substituida.bloco_mp] = substituida.dados
+
+            # Invalidação das linhas das outras caches
+            for i in range(4):
+                if i != florista.value:
+                    invalida = self.floristas[i].buscar_bloco(bloco_flor)
+                    if invalida is not None:
+                        linha_invalida:Linha = self.floristas[i].linhas[invalida]
+                        # Deixei repetitivo mesmo para ficar fácil de ver o que acontece com cada
+                        # linha que tentamos inválidar
+                        match linha_invalida.estado:
+                            case Moesi.E: # Linha é invalidada e não procura outras linhas
+                               linha_invalida.estado = Moesi.I
+                               break 
+                            case Moesi.M: # Atualiza na MP e linha é invalidada e não procura outras linhas
+                                self.estufa[linha_invalida.bloco_mp] = linha_invalida.dados
+                                linha_invalida.estado = Moesi.I
+                                break 
+                            case Moesi.S: # Linha é invalidada
+                                linha_invalida.estado = Moesi.I
+                            case Moesi.O: # Atualiza na MP e linha é invalidada
+                                self.estufa[linha_invalida.bloco_mp] = linha_invalida.dados
+                                linha_invalida.estado = Moesi.I
+
+            
+            dados_modificados = self.estufa[bloco_flor][:]
+            dados_modificados[pos_no_bloco_flor] = novo_valor
+            nova_linha:Linha = Linha()
+            nova_linha.dados = dados_modificados
+            nova_linha.estado = Moesi.M
+            nova_linha.bloco_mp = bloco_flor
+            florista_certo.linhas[florista_certo.fifo_contador] = nova_linha
+            florista_certo.fifo_contador = (florista_certo.fifo_contador + 1) % 4
+
+        return novo_valor
 
 def bloco(flor: int) -> int:
     ''' Função que calcula o bloco na memória principal que determinada flor (posição geral entre 0
