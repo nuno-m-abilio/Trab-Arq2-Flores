@@ -40,9 +40,11 @@ def main():
         print("\n\n--- Menu Floricultura com Simulação de Cache ---")
         
         # Escolha do florista
-        florista_str = input("\nEscolha um florista (h: Heloise, j: Josiane, v: Valeria, y: Yandre, s: Sair): ").strip().lower()
+        florista_str = input("\nEscolha um florista (h: Heloise, j: Josiane, v: Valeria, y: Yandre," + \
+                            " s: Sair): ").strip().lower()
         while florista_str not in ["h", "j", "v", "y", "s"]:
-            florista_str = input("\nOpção Inválida! Digite um caractere válido para um florista (h: Heloise, j: Josiane, v: Valeria, y: Yandre, s: Sair): ").strip().lower()
+            florista_str = input("\nOpção Inválida! Digite um caractere válido para um florista (h:" + \
+                            " Heloise, j: Josiane, v: Valeria, y: Yandre, s: Sair): ").strip().lower()
         florista = f.Florista.HELOISE
         match florista_str:
             case "s":
@@ -57,9 +59,14 @@ def main():
                 florista = f.Florista.YANDRE
         
         # Escolha da Operação
-        operacao = input("\nEscolha a operação:\nl: Leitura da quantidade de uma flor no estoque,\ne: Escrita da quantidade de uma flor no estoque,\nc: Consultar o bloco na MP de uma flor,\ni: Imprimir toda a floricultura,\ns: Sair\n").strip().lower()
+        operacao = input("\nEscolha a operação:\nl: Leitura da quantidade de uma flor no estoque," + \
+                        "\ne: Escrita da quantidade de uma flor no estoque,\nc: Consultar o bloco" + \
+                        " na MP de uma flor,\ni: Imprimir toda a floricultura,\ns: Sair\n").strip().lower()
         while operacao not in ["l", "e", "s", "c", "i"]:
-            operacao = input("\nOpção Inválida!Escolha uma operação da lista (l: Leitura, e: Escrita, s: Sair): ").strip().lower()
+            operacao = input("\nOpção Inválida! Escolha uma operação da lista:\nl: Leitura da" + \
+                        " quantidade de uma flor no estoque,\ne: Escrita da quantidade de uma" + \
+                        " flor no estoque,\nc: Consultar o bloco na MP de uma flor,\ni:" + \
+                        " Imprimir toda a floricultura,\ns: Sair\n").strip().lower()
         
         # Saí da aplicação apagando toda a floricultura
         if operacao == "s":
