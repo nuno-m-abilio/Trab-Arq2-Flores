@@ -243,8 +243,8 @@ class Floricultura:
         hit_or_miss:int|None = florista_certo.buscar_bloco(bloco_flor)
 
         # Caso do Hit, ou seja, encontramos uma linha não inválida na nossa cache com o bloco certo
-        print("Flor encontrada! (Write Hit)")
         if hit_or_miss is not None:
+            print("Flor encontrada! (Write Hit)")
             linha:Linha = florista_certo.linhas[hit_or_miss]
             if linha.estado in [Moesi.M, Moesi.O, Moesi.S]: # Atualiza na MP
                 self.estufa[bloco_flor] = linha.dados
